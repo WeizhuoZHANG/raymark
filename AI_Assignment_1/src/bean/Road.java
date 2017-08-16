@@ -7,6 +7,7 @@ public class Road {
 	private Junction endJunction;
 	private float length;
 	private float nLots;
+	private float lengthOfLot;
 
 	public String getName() {
 		return name;
@@ -53,6 +54,14 @@ public class Road {
 		// TODO Auto-generated method stub
 		return this.getName() + this.getStartJunction().getName() + this.getEndJunction().getName() + this.getLength()
 				+ this.getnLots();
+	}
+
+	public float getLengthOfLot() {
+		return lengthOfLot;
+	}
+
+	public void setLengthOfLot(float lengthOfLot) {
+		this.lengthOfLot = lengthOfLot;
 	}
 
 }

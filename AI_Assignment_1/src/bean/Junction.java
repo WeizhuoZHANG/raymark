@@ -10,6 +10,8 @@ public class Junction {
 
 	public Junction() {
 		// TODO Auto-generated constructor stub
+		// set cost default value is -1.0
+		cost = -1.0f;
 		connectionRoad = new ArrayList<Road>();
 	}
 
