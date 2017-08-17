@@ -3,6 +3,7 @@ package main;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,30 +19,34 @@ import util.FileUtil;
  *
  */
 public class Main {
-	static String environment = "testcase/testcase-2/test2.txt";
-	static String query = "testcase/testcase-2/query2.txt";
+	static String testpath = "testcase/testcase-2/";
+	static String environment = testpath + "test2.txt";
+	static String query = testpath + "query2.txt";
+	static String outputfile = testpath + "output.txt";
 	// static String environment = "testcase/testcase-1/test-simple.txt";
 	// static String query = "testcase/testcase-1/query-simple.txt";
 	static ArrayList<Road> roads = new ArrayList<Road>();
 	static ArrayList<Junction> junctions = new ArrayList<Junction>();
 	static ArrayList<Query> queries = new ArrayList<Query>();
-	// static boolean goalStart = false;
-	// static boolean goalEnd = false;
+	static String result = "";
 
 	public static void main(String[] args) {
+		long startTime = System.currentTimeMillis(); // 获取开始时间
+
 		init();
 		// initial junctions cost to -1.0, before starting a new loop of query
 		for (Query query : queries) {
 			for (Junction junction : junctions) {
-				// goalStart = false;
-				// goalEnd = false;
 				junction.setCost(-1.0f);
 				junction.setPath("");
 			}
 			mainLoop(query);
 		}
-
+		output();
 		// mainLoop();
+
+		long endTime = System.currentTimeMillis(); // 获取结束时间
+		System.out.println("程序运行时间： " + (endTime - startTime) + "ms");
 	}
 
 	public static void mainLoop(Query query) {
@@ -77,8 +82,7 @@ public class Main {
 		// if initial road is goal road
 		if (initRoadName.equals(goalRoadName)) {
 			shortestCost = Math.abs(goalPlot - initPlot) / 2 * iRoads[0].getLengthOfLot();
-			System.out.println(shortestCost);
-			System.out.println(initRoadName);
+			printResult(shortestCost, initRoadName);
 			return;
 		}
 
@@ -93,87 +97,58 @@ public class Main {
 			// set goal junctions to default value -1.0f
 			goalStartJunction.setCost(-1f);
 			goalEndJunction.setCost(-1f);
-			// System.out.println(goalStartJunctionCost);
-			// System.out.println(goalEndJunctionCost);
 
 			// set Initial junctions node
 			Junction initStartJunction = iRoads[0].getStartJunction();
 			Junction initEndJunction = iRoads[0].getEndJunction();
 			setJunctionsValue(initStartJunction, initEndJunction, iRoads[0], initPlot);
 
-			// // push initial node's start and end junction to priority queue
-			// Junction root = new Junction();
-			// root.addConnection(iRoads[0]);
-			// root.setCost(0);
-			// junctionsQueue.add(root);
+			/*
+			 * 8/17 4:22pm
+			 */
+			if (initStartJunction == goalStartJunction) {
+				initStartJunction.setCost(initStartJunction.getCost() + goalStartJunctionCost);
+			} else if (initStartJunction == goalEndJunction) {
+				initStartJunction.setCost(initStartJunction.getCost() + goalEndJunctionCost);
+			}
+			if (initEndJunction == goalStartJunction) {
+				initEndJunction.setCost(initEndJunction.getCost() + goalStartJunctionCost);
+			} else if (initEndJunction == goalEndJunction) {
+				initEndJunction.setCost(initEndJunction.getCost() + goalEndJunctionCost);
+			}
+
+			// push initial node's start and end junction to priority queue
 
 			junctionsQueue.add(initStartJunction);
 			initStartJunction.setPath(initStartJunction.getName());
 			junctionsQueue.add(initEndJunction);
 			initEndJunction.setPath(initEndJunction.getName());
-			// System.out.println(initStartJunction.getCost());
-			// System.out.println(initEndJunction.getCost());
 
-			// boolean result = false;
 			// main loop to get the result
 			while (true) {
 				Junction peakJunction = junctionsQueue.poll();
-				// System.out.println(peakJunction.getName() + " " +
-				// peakJunction.getCost());
 				if (peakJunction == null) {
 					break;
 				}
 
-				// System.out.println(peakJunction.getName());
-				// if ((peakJunction == goalStartJunction)) {
-				// if (goalStart) {
-				// shortestCost = peakJunction.getCost();
-				// path = initRoadName + " - " + peakJunction.getPath() + " - "
-				// + goalRoadName;
-				// break;
-				// } else {
-				//
-				// }
-				//
-				// }
-				// if (peakJunction == goalEndJunction && goalEnd) {
-				// if (goalEnd) {
-				// shortestCost = peakJunction.getCost();
-				// path = initRoadName + " - " + peakJunction.getPath() + " - "
-				// + goalRoadName;
-				// break;
-				// } else {
-				//
-				// }
-				//
-				// }
-
 				if (peakJunction == goalStartJunction && peakJunction.getCost() != -1) {
-					// goalStartJunction.setCost(peakJunction.getCost() +
-					// goalStartJunctionCost);
-					shortestCost = peakJunction.getCost() + goalStartJunctionCost;
-					// peakJunction.setPath(peakJunction.getPath() + " - " +
-					// peakJunction.getName());
-					// System.out.println("test " + peakJunction.getPath());
+					shortestCost = peakJunction.getCost();
+					// shortestCost = peakJunction.getCost() +
+					// goalStartJunctionCost;
 					path = initRoadName + " - " + peakJunction.getPath() + " - " + goalRoadName;
 					break;
 				}
 				if (peakJunction == goalEndJunction && peakJunction.getCost() != -1) {
-					// goalEndJunction.setCost(peakJunction.getCost() +
-					// goalEndJunctionCost);
-					shortestCost = peakJunction.getCost() + goalEndJunctionCost;
-					// peakJunction.setPath(peakJunction.getPath() + " - " +
-					// peakJunction.getName());
-					// System.out.println("test " + peakJunction.getPath());
+					shortestCost = peakJunction.getCost();
+					// shortestCost = peakJunction.getCost() +
+					// goalEndJunctionCost;
 					path = initRoadName + " - " + peakJunction.getPath() + " - " + goalRoadName;
-					// System.out.println("test " + path);
 					break;
 				}
 
 				ArrayList<Road> peakConnetedRoads = peakJunction.getConnectionRoad();
 
 				for (Road roadNode : peakConnetedRoads) {
-					// float tempCost;
 					if (roadNode.getStartJunction() == peakJunction) {
 						pushSuccessor(junctionsQueue, peakJunction, roadNode.getEndJunction(), roadNode,
 								goalStartJunction, goalEndJunction, goalStartJunctionCost, goalEndJunctionCost);
@@ -186,28 +161,24 @@ public class Main {
 		} catch (NullPointerException e) {
 			// TODO: handle exception
 		}
-		System.out.println(shortestCost);
-		System.out.println(path);
+		printResult(shortestCost, path);
 	}
 
 	public static void pushSuccessor(PriorityQueue<Junction> junctionsQueue, Junction peakJunction, Junction junction,
 			Road roadNode, Junction goalStartJunction, Junction goalEndJunction, float goalStartJunctionCost,
 			float goalEndJunctionCost) {
 		float tempCost;
-		// Junction endJunction = roadNode.getEndJunction();
 		// set temp cost
 
-		// if (junction == goalStartJunction) {
-		// tempCost = peakJunction.getCost() + roadNode.getLength() +
-		// goalStartJunctionCost;
-		// } else if (junction == goalEndJunction) {
-		// tempCost = peakJunction.getCost() + roadNode.getLength() +
-		// goalEndJunctionCost;
-		// } else {
-		// tempCost = peakJunction.getCost() + roadNode.getLength();
-		// }
+		if (junction == goalStartJunction) {
+			tempCost = peakJunction.getCost() + roadNode.getLength() + goalStartJunctionCost;
+		} else if (junction == goalEndJunction) {
+			tempCost = peakJunction.getCost() + roadNode.getLength() + goalEndJunctionCost;
+		} else {
+			tempCost = peakJunction.getCost() + roadNode.getLength();
+		}
 
-		tempCost = peakJunction.getCost() + roadNode.getLength();
+		// tempCost = peakJunction.getCost() + roadNode.getLength();
 
 		// if next junction's cost is default value OR
 		// bigger than temp cost
@@ -219,13 +190,6 @@ public class Main {
 				junction.setPath(peakJunction.getPath() + " - " + roadNode.getName() + " - " + junction.getName());
 			}
 
-			// if (junction == goalStartJunction) {
-			// goalStart = true;
-			// } else if (junction == goalEndJunction) {
-			// goalEnd = true;
-			// }
-			// junction.setPath(peakJunction.getPath() + " - " +
-			// roadNode.getName() + " - " + junction.getName());
 		}
 	}
 
@@ -257,20 +221,9 @@ public class Main {
 
 	public static void setJunctionsValue(Junction startJunction, Junction endJunction, Road road, int plot) {
 		try {
-			// if (plot < (road.getnLots() / 2)) {
-			// startJunction.setCost(road.getLengthOfLot() * (0.5f + plot / 2));
-			// endJunction.setCost(road.getLength() - startJunction.getCost());
-			// } else {
-			// endJunction.setCost(road.getLengthOfLot() * (0.5f + plot / 2));
-			// startJunction.setCost(road.getLength() - endJunction.getCost());
-			// }
 
 			startJunction.setCost(road.getLengthOfLot() * (0.5f + plot / 2));
 			endJunction.setCost(road.getLength() - startJunction.getCost());
-			// System.out.println(plot / 2);
-			// System.out.println(0.5f + plot / 2);
-			// System.out.println("startJunction " + startJunction.getCost());
-			// System.out.println("endJunction " + endJunction.getCost());
 		} catch (
 
 		NullPointerException e) {
@@ -300,8 +253,6 @@ public class Main {
 
 	// read input file set Road and Junction
 	public static void init() {
-		// ArrayList<Road> roads = new ArrayList<Road>();
-		// ArrayList<Junction> junctions = new ArrayList<Junction>();
 
 		File fileEnvironment = FileUtil.openFile(environment);
 		File fileQuery = FileUtil.openFile(query);
@@ -356,6 +307,9 @@ public class Main {
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} catch (NullPointerException e) {
+			// TODO: handle exception
+
 		}
 
 		try {
@@ -363,9 +317,6 @@ public class Main {
 			while ((tempLine = readerQuery.readLine()) != null) {
 				Query tempQuery = new Query();
 				String[] lineEnv = tempLine.split(" ; ");
-				// String a = lineEnv[0].substring(0, getNumIndex(lineEnv[0]) +
-				// 1);
-				// System.out.println(a);
 				tempQuery.setInitPlot(Integer.parseInt(lineEnv[0].substring(0, getNumIndex(lineEnv[0]) + 1)));
 				tempQuery.setInitName(lineEnv[0].substring(getNumIndex(lineEnv[0]) + 1, lineEnv[0].length()));
 				tempQuery.setEndPlot(Integer.parseInt(lineEnv[1].substring(0, getNumIndex(lineEnv[1]) + 1)));
@@ -396,6 +347,24 @@ public class Main {
 			}
 		}
 		return index;
+	}
+
+	public static void printResult(float cost, String path) {
+		// System.out.println(cost + "\n" + path);
+
+		result += cost + " ; " + path + "\n";
+	}
+
+	public static void output() {
+		try {
+			int i = result.lastIndexOf("\n");
+			result = result.substring(0, i);
+			FileWriter writer = new FileWriter(outputfile);
+			writer.write(result);
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static boolean isEven(float number) {
