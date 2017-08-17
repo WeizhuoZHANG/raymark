@@ -7,10 +7,12 @@ public class Junction {
 	private String name;
 	private float cost;
 	private ArrayList<Road> connectionRoad;
+	private String path;
 
 	public Junction() {
 		// TODO Auto-generated constructor stub
 		// set cost default value is -1.0
+		path = "";
 		cost = -1.0f;
 		connectionRoad = new ArrayList<Road>();
 	}
@@ -60,5 +62,13 @@ public class Junction {
 	public String toString() {
 		// TODO Auto-generated method stub
 		return this.getName();
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
 	}
 }

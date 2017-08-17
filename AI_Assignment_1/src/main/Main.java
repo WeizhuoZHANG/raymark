@@ -1,3 +1,4 @@
+
 package main;
 
 import java.io.BufferedReader;
@@ -12,22 +13,34 @@ import bean.Query;
 import bean.Road;
 import util.FileUtil;
 
+/**
+ * 1. did not solve the no way problem
+ *
+ */
 public class Main {
-	static String environment = "testcase/testcase-1/test-simple.txt";
-	static String query = "testcase/testcase-1/query-simple.txt";
+	static String environment = "testcase/testcase-2/test2.txt";
+	static String query = "testcase/testcase-2/query2.txt";
+	// static String environment = "testcase/testcase-1/test-simple.txt";
+	// static String query = "testcase/testcase-1/query-simple.txt";
 	static ArrayList<Road> roads = new ArrayList<Road>();
 	static ArrayList<Junction> junctions = new ArrayList<Junction>();
 	static ArrayList<Query> queries = new ArrayList<Query>();
+	// static boolean goalStart = false;
+	// static boolean goalEnd = false;
 
 	public static void main(String[] args) {
 		init();
 		// initial junctions cost to -1.0, before starting a new loop of query
 		for (Query query : queries) {
 			for (Junction junction : junctions) {
+				// goalStart = false;
+				// goalEnd = false;
 				junction.setCost(-1.0f);
+				junction.setPath("");
 			}
 			mainLoop(query);
 		}
+
 		// mainLoop();
 	}
 
@@ -37,15 +50,16 @@ public class Main {
 		int initPlot = query.getInitPlot();
 		int goalPlot = query.getEndPlot();
 		// public static void mainLoop() {
-		// String initRoadName = "Carmody1";
-		// String goalRoadName = "Mitre";
+		// String initRoadName = "Road-28";
+		// String goalRoadName = "Road-6";
 		// int initPlot = 1;
-		// int goalPlot = 8;
+		// int goalPlot = 20;
 
 		Comparator<Junction> OrderIsdn = getComparator(); // set comparator by
 															// decrease
 		PriorityQueue<Junction> junctionsQueue = new PriorityQueue<Junction>(OrderIsdn);
 		float shortestCost = 0;
+		String path = "";
 
 		// find initial and end Road
 		// iRoads[0] for initial road
@@ -64,6 +78,7 @@ public class Main {
 		if (initRoadName.equals(goalRoadName)) {
 			shortestCost = Math.abs(goalPlot - initPlot) / 2 * iRoads[0].getLengthOfLot();
 			System.out.println(shortestCost);
+			System.out.println(initRoadName);
 			return;
 		}
 
@@ -86,9 +101,6 @@ public class Main {
 			Junction initEndJunction = iRoads[0].getEndJunction();
 			setJunctionsValue(initStartJunction, initEndJunction, iRoads[0], initPlot);
 
-			if (initEndJunction == goalStartJunction) {
-
-			}
 			// // push initial node's start and end junction to priority queue
 			// Junction root = new Junction();
 			// root.addConnection(iRoads[0]);
@@ -96,8 +108,9 @@ public class Main {
 			// junctionsQueue.add(root);
 
 			junctionsQueue.add(initStartJunction);
+			initStartJunction.setPath(initStartJunction.getName());
 			junctionsQueue.add(initEndJunction);
-
+			initEndJunction.setPath(initEndJunction.getName());
 			// System.out.println(initStartJunction.getCost());
 			// System.out.println(initEndJunction.getCost());
 
@@ -105,16 +118,55 @@ public class Main {
 			// main loop to get the result
 			while (true) {
 				Junction peakJunction = junctionsQueue.poll();
+				// System.out.println(peakJunction.getName() + " " +
+				// peakJunction.getCost());
 				if (peakJunction == null) {
 					break;
 				}
 
+				// System.out.println(peakJunction.getName());
+				// if ((peakJunction == goalStartJunction)) {
+				// if (goalStart) {
+				// shortestCost = peakJunction.getCost();
+				// path = initRoadName + " - " + peakJunction.getPath() + " - "
+				// + goalRoadName;
+				// break;
+				// } else {
+				//
+				// }
+				//
+				// }
+				// if (peakJunction == goalEndJunction && goalEnd) {
+				// if (goalEnd) {
+				// shortestCost = peakJunction.getCost();
+				// path = initRoadName + " - " + peakJunction.getPath() + " - "
+				// + goalRoadName;
+				// break;
+				// } else {
+				//
+				// }
+				//
+				// }
+
 				if (peakJunction == goalStartJunction && peakJunction.getCost() != -1) {
+					// goalStartJunction.setCost(peakJunction.getCost() +
+					// goalStartJunctionCost);
 					shortestCost = peakJunction.getCost() + goalStartJunctionCost;
+					// peakJunction.setPath(peakJunction.getPath() + " - " +
+					// peakJunction.getName());
+					// System.out.println("test " + peakJunction.getPath());
+					path = initRoadName + " - " + peakJunction.getPath() + " - " + goalRoadName;
 					break;
 				}
 				if (peakJunction == goalEndJunction && peakJunction.getCost() != -1) {
+					// goalEndJunction.setCost(peakJunction.getCost() +
+					// goalEndJunctionCost);
 					shortestCost = peakJunction.getCost() + goalEndJunctionCost;
+					// peakJunction.setPath(peakJunction.getPath() + " - " +
+					// peakJunction.getName());
+					// System.out.println("test " + peakJunction.getPath());
+					path = initRoadName + " - " + peakJunction.getPath() + " - " + goalRoadName;
+					// System.out.println("test " + path);
 					break;
 				}
 
@@ -135,7 +187,7 @@ public class Main {
 			// TODO: handle exception
 		}
 		System.out.println(shortestCost);
-
+		System.out.println(path);
 	}
 
 	public static void pushSuccessor(PriorityQueue<Junction> junctionsQueue, Junction peakJunction, Junction junction,
@@ -164,7 +216,16 @@ public class Main {
 			junction.setCost(tempCost);
 			if (!junctionsQueue.contains(junction)) {
 				junctionsQueue.add(junction);
+				junction.setPath(peakJunction.getPath() + " - " + roadNode.getName() + " - " + junction.getName());
 			}
+
+			// if (junction == goalStartJunction) {
+			// goalStart = true;
+			// } else if (junction == goalEndJunction) {
+			// goalEnd = true;
+			// }
+			// junction.setPath(peakJunction.getPath() + " - " +
+			// roadNode.getName() + " - " + junction.getName());
 		}
 	}
 
@@ -206,7 +267,10 @@ public class Main {
 
 			startJunction.setCost(road.getLengthOfLot() * (0.5f + plot / 2));
 			endJunction.setCost(road.getLength() - startJunction.getCost());
-
+			// System.out.println(plot / 2);
+			// System.out.println(0.5f + plot / 2);
+			// System.out.println("startJunction " + startJunction.getCost());
+			// System.out.println("endJunction " + endJunction.getCost());
 		} catch (
 
 		NullPointerException e) {
