@@ -31,8 +31,11 @@ public class Main {
 	static String result = "";
 
 	public static void main(String[] args) {
-		long startTime = System.currentTimeMillis(); // 获取开始时间
+		// long startTime = System.currentTimeMillis(); // 获取开始时间
 
+		environment = args[0];
+		query = args[1];
+		outputfile = args[2];
 		init();
 		// initial junctions cost to -1.0, before starting a new loop of query
 		for (Query query : queries) {
@@ -45,8 +48,8 @@ public class Main {
 		output();
 		// mainLoop();
 
-		long endTime = System.currentTimeMillis(); // 获取结束时间
-		System.out.println("程序运行时间： " + (endTime - startTime) + "ms");
+		// long endTime = System.currentTimeMillis(); // 获取结束时间
+		// System.out.println("程序运行时间： " + (endTime - startTime) + "ms");
 	}
 
 	public static void mainLoop(Query query) {
@@ -128,6 +131,7 @@ public class Main {
 			while (true) {
 				Junction peakJunction = junctionsQueue.poll();
 				if (peakJunction == null) {
+					printResult(shortestCost, path);
 					break;
 				}
 
@@ -351,13 +355,16 @@ public class Main {
 
 	public static void printResult(float cost, String path) {
 		// System.out.println(cost + "\n" + path);
-
-		result += cost + " ; " + path + "\n";
+		if (cost == 0) {
+			result += "no-path" + "\r\n";
+		} else {
+			result += cost + " ; " + path + "\r\n";
+		}
 	}
 
 	public static void output() {
 		try {
-			int i = result.lastIndexOf("\n");
+			int i = result.lastIndexOf("\r\n");
 			result = result.substring(0, i);
 			FileWriter writer = new FileWriter(outputfile);
 			writer.write(result);
