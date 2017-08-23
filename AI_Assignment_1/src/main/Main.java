@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Queue;
 
 import bean.Junction;
 import bean.Query;
@@ -27,13 +29,14 @@ public class Main {
 	// static String outputfile = testpath + "output.txt";
 
 	static String testpath = "AI/";
-	static String environment = testpath + "1000000.txt";
-	static String query = testpath + "1000000_query.txt";
+	static String environment = testpath + "100000.txt";
+	static String query = testpath + "100000_query.txt";
 	static String outputfile = "output.txt";
 
 	// static String environment = "testcase/testcase-1/test-simple.txt";
 	// static String query = "testcase/testcase-1/query-simple.txt";
-	static Map<String, Road> roads = new HashMap<String, Road>();
+	// static Map<String, Road> roads = new HashMap<String, Road>();
+	static Queue<Road> queryRoads = new LinkedList<Road>();
 	static Map<String, Junction> junctions = new HashMap<String, Junction>();
 	// static ArrayList<Junction> junctions = new ArrayList<Junction>();
 	static ArrayList<Query> queries = new ArrayList<Query>();
@@ -51,6 +54,7 @@ public class Main {
 		for (Query query : queries) {
 			for (Map.Entry<String, Junction> entry : junctions.entrySet()) {
 				entry.getValue().setCost(-1.0f);
+				entry.getValue().setPath("");
 			}
 			mainLoop(query);
 		}
@@ -106,6 +110,7 @@ public class Main {
 		try {
 			float goalStartJunctionCost = goalStartJunction.getCost();
 			float goalEndJunctionCost = goalEndJunction.getCost();
+
 			// set goal junctions to default value -1.0f
 			goalStartJunction.setCost(-1f);
 			goalEndJunction.setCost(-1f);
@@ -191,13 +196,13 @@ public class Main {
 			tempCost = peakJunction.getCost() + roadNode.getLength();
 		}
 
-		// tempCost = peakJunction.getCost() + roadNode.getLength();
-
 		// if next junction's cost is default value OR
 		// bigger than temp cost
 		// then push it into queue
+
 		if (junction.getCost() == -1.0 || tempCost < junction.getCost()) {
 			junction.setCost(tempCost);
+
 			if (!junctionsQueue.contains(junction)) {
 				junctionsQueue.add(junction);
 				junction.setPath(peakJunction.getPath() + " - " + roadNode.getName() + " - " + junction.getName());
@@ -214,8 +219,10 @@ public class Main {
 			/*
 			 * Added by Ray 14:12pm 23 AUG 2017
 			 */
-			tempRoads[0] = roads.get(initRoadName);
-			tempRoads[1] = roads.get(goalRoadName);
+			// tempRoads[0] = roads.get(initRoadName);
+			// tempRoads[1] = roads.get(goalRoadName);
+			tempRoads[0] = queryRoads.poll();
+			tempRoads[1] = queryRoads.poll();
 			/*
 			 * Added end
 			 */
@@ -283,7 +290,8 @@ public class Main {
 
 	// read input file set Road and Junction
 	public static void init() {
-		// HashMap<String, Junction> junctions = new HashMap<>();
+		// Map<String, Junction> junctions = new HashMap<String, Junction>();
+		Map<String, Road> roads = new HashMap<String, Road>();
 
 		File fileEnvironment = FileUtil.openFile(environment);
 		File fileQuery = FileUtil.openFile(query);
@@ -384,6 +392,14 @@ public class Main {
 				tempQuery.setInitName(lineEnv[0].substring(getNumIndex(lineEnv[0]) + 1, lineEnv[0].length()));
 				tempQuery.setEndPlot(Integer.parseInt(lineEnv[1].substring(0, getNumIndex(lineEnv[1]) + 1)));
 				tempQuery.setEndName(lineEnv[1].substring(getNumIndex(lineEnv[1]) + 1, lineEnv[1].length()));
+
+				try {
+					queryRoads.add(roads.get(tempQuery.getInitName()));
+					queryRoads.add(roads.get(tempQuery.getEndName()));
+				} catch (NullPointerException e) {
+					// TODO: handle exception
+					System.err.println("queryRoads.add");
+				}
 				queries.add(tempQuery);
 			}
 		} catch (IOException e1) {
