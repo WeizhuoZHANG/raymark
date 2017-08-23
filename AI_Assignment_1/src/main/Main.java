@@ -7,6 +7,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.PriorityQueue;
 
 import bean.Junction;
@@ -19,37 +21,44 @@ import util.FileUtil;
  *
  */
 public class Main {
-	static String testpath = "testcase/testcase-2/";
-	static String environment = testpath + "test2.txt";
-	static String query = testpath + "query2.txt";
-	static String outputfile = testpath + "output.txt";
+	// static String testpath = "testcase/testcase-2/";
+	// static String environment = testpath + "test2.txt";
+	// static String query = testpath + "query2.txt";
+	// static String outputfile = testpath + "output.txt";
+
+	static String testpath = "AI/";
+	static String environment = testpath + "1000000.txt";
+	static String query = testpath + "1000000_query.txt";
+	static String outputfile = "output.txt";
+
 	// static String environment = "testcase/testcase-1/test-simple.txt";
 	// static String query = "testcase/testcase-1/query-simple.txt";
-	static ArrayList<Road> roads = new ArrayList<Road>();
-	static ArrayList<Junction> junctions = new ArrayList<Junction>();
+	static Map<String, Road> roads = new HashMap<String, Road>();
+	static Map<String, Junction> junctions = new HashMap<String, Junction>();
+	// static ArrayList<Junction> junctions = new ArrayList<Junction>();
 	static ArrayList<Query> queries = new ArrayList<Query>();
 	static String result = "";
 
 	public static void main(String[] args) {
-		// long startTime = System.currentTimeMillis(); // 获取开始时间
+		long startTime = System.currentTimeMillis(); // 获取开始时间
 
-		environment = args[0];
-		query = args[1];
-		outputfile = args[2];
+		// environment = args[0];
+		// query = args[1];
+		// outputfile = args[2];
+
 		init();
 		// initial junctions cost to -1.0, before starting a new loop of query
 		for (Query query : queries) {
-			for (Junction junction : junctions) {
-				junction.setCost(-1.0f);
-				junction.setPath("");
+			for (Map.Entry<String, Junction> entry : junctions.entrySet()) {
+				entry.getValue().setCost(-1.0f);
 			}
 			mainLoop(query);
 		}
-		output();
 		// mainLoop();
+		output();
 
-		// long endTime = System.currentTimeMillis(); // 获取结束时间
-		// System.out.println("程序运行时间： " + (endTime - startTime) + "ms");
+		long endTime = System.currentTimeMillis(); // 获取结束时间
+		System.out.println("程序运行时间： " + (endTime - startTime) + "ms");
 	}
 
 	public static void mainLoop(Query query) {
@@ -58,10 +67,10 @@ public class Main {
 		int initPlot = query.getInitPlot();
 		int goalPlot = query.getEndPlot();
 		// public static void mainLoop() {
-		// String initRoadName = "Road-28";
-		// String goalRoadName = "Road-6";
-		// int initPlot = 1;
-		// int goalPlot = 20;
+		// String initRoadName = "road_6652_0_6682";
+		// String goalRoadName = "road_66656_1_66705";
+		// int initPlot = 200;
+		// int goalPlot = 200;
 
 		Comparator<Junction> OrderIsdn = getComparator(); // set comparator by
 															// decrease
@@ -199,22 +208,39 @@ public class Main {
 
 	public static Road[] setInitRoad(String initRoadName, String goalRoadName) {
 		try {
-			int initAndGoalFlag = 0;
+			// int initAndGoalFlag = 0;
 			Road[] tempRoads = { new Road(), new Road() };
-			for (Road tempRoad : roads) {
-				String tempRoadName = tempRoad.getName();
-				if (initAndGoalFlag == 2) {
-					break;
-				}
-				if (tempRoadName.equals(initRoadName)) {
-					tempRoads[0] = tempRoad;
-					initAndGoalFlag++;
-				}
-				if (tempRoadName.equals(goalRoadName)) {
-					tempRoads[1] = tempRoad;
-					initAndGoalFlag++;
-				}
-			}
+
+			/*
+			 * Added by Ray 14:12pm 23 AUG 2017
+			 */
+			tempRoads[0] = roads.get(initRoadName);
+			tempRoads[1] = roads.get(goalRoadName);
+			/*
+			 * Added end
+			 */
+
+			/*
+			 * Delete by Ray 14:12pm 23 AUG 2017
+			 */
+			// for (Road tempRoad : roads) {
+			// String tempRoadName = tempRoad.getName();
+			// if (initAndGoalFlag == 2) {
+			// break;
+			// }
+			// if (tempRoadName.equals(initRoadName)) {
+			// tempRoads[0] = tempRoad;
+			// initAndGoalFlag++;
+			// }
+			// if (tempRoadName.equals(goalRoadName)) {
+			// tempRoads[1] = tempRoad;
+			// initAndGoalFlag++;
+			// }
+			// }
+			/*
+			 * Delete end
+			 */
+
 			return tempRoads;
 		} catch (NullPointerException e) {
 			// TODO: handle exception
@@ -257,6 +283,7 @@ public class Main {
 
 	// read input file set Road and Junction
 	public static void init() {
+		// HashMap<String, Junction> junctions = new HashMap<>();
 
 		File fileEnvironment = FileUtil.openFile(environment);
 		File fileQuery = FileUtil.openFile(query);
@@ -268,45 +295,77 @@ public class Main {
 			String tempLine = null;
 			while ((tempLine = readerEnvironment.readLine()) != null) {
 				Road tempRoad = new Road();
-				boolean startJuncitonFlag = true;
-				boolean endJuncitonFlag = true;
+				// boolean startJuncitonFlag = true;
+				// boolean endJuncitonFlag = true;
 				String[] lineEnv = tempLine.split(" ; ");
 				tempRoad.setName(lineEnv[0]);
+				Junction startJuncitonInit = junctions.get(lineEnv[1]);
+				Junction endJunctionInit = junctions.get(lineEnv[2]);
 				tempRoad.setLength(Float.parseFloat(lineEnv[3]));
 				tempRoad.setnLots(Float.parseFloat(lineEnv[4]));
 				tempRoad.setLengthOfLot(2f * Float.parseFloat(lineEnv[3]) / Float.parseFloat(lineEnv[4]));
-				if (junctions != null) {
-					for (int i = 0; i < junctions.size(); i++) {
-						if (lineEnv[1].equals(junctions.get(i).getName())) {
-							tempRoad.setStartJunction(junctions.get(i));
-							startJuncitonFlag = false;
-							continue;
-						} else if (lineEnv[2].equals(junctions.get(i).getName())) {
-							tempRoad.setEndJunction(junctions.get(i));
-							endJuncitonFlag = false;
-							continue;
-						}
-						if (!startJuncitonFlag && !endJuncitonFlag) {
-							break;
-						}
-					}
+				/*
+				 * Added by Ray 14:08pm 23 AUG 2017
+				 */
+				if (startJuncitonInit == null) {
+					startJuncitonInit = new Junction();
+					startJuncitonInit.setName(lineEnv[1]);
+					junctions.put(lineEnv[1], startJuncitonInit);
 				}
+				if (endJunctionInit == null) {
+					endJunctionInit = new Junction();
+					endJunctionInit.setName(lineEnv[2]);
+					junctions.put(lineEnv[2], endJunctionInit);
+				}
+				tempRoad.setStartJunction(startJuncitonInit);
+				tempRoad.setEndJunction(endJunctionInit);
+				startJuncitonInit.addConnection(tempRoad);
+				endJunctionInit.addConnection(tempRoad);
+				roads.put(lineEnv[0], tempRoad);
+				/*
+				 * Added end
+				 */
 
-				if (startJuncitonFlag) {
-					Junction tempJuction = new Junction();
-					tempJuction.setName(lineEnv[1]);
-					junctions.add(tempJuction);
-					tempRoad.setStartJunction(tempJuction);
-				}
-				if (endJuncitonFlag) {
-					Junction tempJuction = new Junction();
-					tempJuction.setName(lineEnv[2]);
-					junctions.add(tempJuction);
-					tempRoad.setEndJunction(tempJuction);
-				}
-				tempRoad.getStartJunction().addConnection(tempRoad);
-				tempRoad.getEndJunction().addConnection(tempRoad);
-				roads.add(tempRoad);
+				/*
+				 * Deleted by Ray 14:08pm 23 AUG 2017
+				 */
+				// if (junctions != null) {
+				// for (int i = 0; i < junctions.size(); i++) {
+				// if (lineEnv[1].equals(junctions.get(i).getName())) {
+				// tempRoad.setStartJunction(junctions.get(i));
+				// startJuncitonFlag = false;
+				// continue;
+				// } else if (lineEnv[2].equals(junctions.get(i).getName())) {
+				// tempRoad.setEndJunction(junctions.get(i));
+				// endJuncitonFlag = false;
+				// continue;
+				// }
+				// if (!startJuncitonFlag && !endJuncitonFlag) {
+				// break;
+				// }
+				// }
+				// }
+
+				// if (startJuncitonFlag) {
+				// Junction tempJuction = new Junction();
+				// tempJuction.setName(lineEnv[1]);
+				// junctions.put(tempJuction.getName(), tempJuction);
+				// // junctions.add(tempJuction);
+				// tempRoad.setStartJunction(tempJuction);
+				// }
+				// if (endJuncitonFlag) {
+				// Junction tempJuction = new Junction();
+				// tempJuction.setName(lineEnv[2]);
+				// junctions.put(tempJuction.getName(), tempJuction);
+				// // junctions.add(tempJuction);
+				// tempRoad.setEndJunction(tempJuction);
+				// }
+				// tempRoad.getStartJunction().addConnection(tempRoad);
+				// tempRoad.getEndJunction().addConnection(tempRoad);
+				// roads.add(tempRoad);
+				/*
+				 * Delete end
+				 */
 			}
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
