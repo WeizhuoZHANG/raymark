@@ -29,8 +29,8 @@ public class Main {
 	// static String outputfile = testpath + "output.txt";
 
 	static String testpath = "AI/";
-	static String environment = testpath + "100000.txt";
-	static String query = testpath + "100000_query.txt";
+	static String environment = testpath + "1000000.txt";
+	static String query = testpath + "1000000_query.txt";
 	static String outputfile = "output.txt";
 
 	// static String environment = "testcase/testcase-1/test-simple.txt";
@@ -40,7 +40,7 @@ public class Main {
 	static Map<String, Junction> junctions = new HashMap<String, Junction>();
 	// static ArrayList<Junction> junctions = new ArrayList<Junction>();
 	static ArrayList<Query> queries = new ArrayList<Query>();
-	static String result = "";
+	static StringBuffer result = new StringBuffer();
 
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis(); // 获取开始时间
@@ -50,11 +50,13 @@ public class Main {
 		// outputfile = args[2];
 
 		init();
+		long endTime1 = System.currentTimeMillis(); // 获取结束时间
+		System.out.println("程序运行时间： " + (endTime1 - startTime) + "ms");
 		// initial junctions cost to -1.0, before starting a new loop of query
 		for (Query query : queries) {
 			for (Map.Entry<String, Junction> entry : junctions.entrySet()) {
 				entry.getValue().setCost(-1.0f);
-				entry.getValue().setPath("");
+				entry.getValue().setPath(new StringBuffer());
 			}
 			mainLoop(query);
 		}
@@ -137,9 +139,9 @@ public class Main {
 			// push initial node's start and end junction to priority queue
 
 			junctionsQueue.add(initStartJunction);
-			initStartJunction.setPath(initStartJunction.getName());
+			initStartJunction.setPath(new StringBuffer(initStartJunction.getName()));
 			junctionsQueue.add(initEndJunction);
-			initEndJunction.setPath(initEndJunction.getName());
+			initEndJunction.setPath(new StringBuffer(initEndJunction.getName()));
 
 			// main loop to get the result
 			while (true) {
@@ -205,7 +207,8 @@ public class Main {
 
 			if (!junctionsQueue.contains(junction)) {
 				junctionsQueue.add(junction);
-				junction.setPath(peakJunction.getPath() + " - " + roadNode.getName() + " - " + junction.getName());
+				junction.setPath(
+						peakJunction.getPath().append(" - " + roadNode.getName() + " - " + junction.getName()));
 			}
 
 		}
@@ -431,18 +434,18 @@ public class Main {
 	public static void printResult(float cost, String path) {
 		// System.out.println(cost + "\n" + path);
 		if (cost == 0) {
-			result += "no-path" + "\r\n";
+			result.append("no-path" + "\r\n");
 		} else {
-			result += cost + " ; " + path + "\r\n";
+			result.append(cost + " ; " + path + "\r\n");
 		}
 	}
 
 	public static void output() {
 		try {
 			int i = result.lastIndexOf("\r\n");
-			result = result.substring(0, i);
+			result = new StringBuffer(result.substring(0, i));
 			FileWriter writer = new FileWriter(outputfile);
-			writer.write(result);
+			writer.write(result.toString());
 			writer.close();
 		} catch (IOException e) {
 			e.printStackTrace();
