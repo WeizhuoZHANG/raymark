@@ -304,7 +304,7 @@ public class Main {
 
 		try {
 			String tempLine = null;
-			while ((tempLine = readerEnvironment.readLine()) != null) {
+			while ((tempLine = readerEnvironment.readLine()) != null && !tempLine.equals("")) {
 				Road tempRoad = new Road();
 				// boolean startJuncitonFlag = true;
 				// boolean endJuncitonFlag = true;
@@ -388,7 +388,7 @@ public class Main {
 
 		try {
 			String tempLine = null;
-			while ((tempLine = readerQuery.readLine()) != null) {
+			while ((tempLine = readerQuery.readLine()) != null && !tempLine.equals("")) {
 				Query tempQuery = new Query();
 				String[] lineEnv = tempLine.split(" ; ");
 				tempQuery.setInitPlot(Integer.parseInt(lineEnv[0].substring(0, getNumIndex(lineEnv[0]) + 1)));
