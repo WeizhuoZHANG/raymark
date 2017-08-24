@@ -19,22 +19,58 @@ import bean.Road;
 import util.FileUtil;
 
 /**
- * 1. did not solve the no way problem
+ * 1. str.replaceAll(" ","")
  *
  */
 public class Main {
-	// static String testpath = "testcase/testcase-2/";
-	// static String environment = testpath + "test2.txt";
-	// static String query = testpath + "query2.txt";
-	// static String outputfile = testpath + "output.txt";
-
 	static String testpath = "AI/";
-	static String environment = testpath + "1000000.txt";
-	static String query = testpath + "1000000_query.txt";
+
+	// static String environment = testpath + "1_test-simple.txt";
+	// static String query = testpath + "1_query-simple.txt";
+
+	// static String environment = testpath + "1_test2.txt";
+	// static String query = testpath + "1_query2.txt";
+
+	// static String environment = testpath + "1000.txt";
+	// static String query = testpath + "1000_query.txt";
+
+	// static String environment = testpath + "10000.txt";
+	// static String query = testpath + "10000_query.txt";
+
+	// static String environment = testpath + "100000.txt";
+	// static String query = testpath + "100000_query.txt";
+
+	// static String environment = testpath + "1000000.txt";
+	// static String query = testpath + "1000000_query.txt";
+
+	// static String environment = testpath + "corner.txt";
+	// static String query = testpath + "corner_query.txt";
+
+	// static String environment = testpath + "no_repeats_1000.txt";
+	// static String query = testpath + "no_repeats_1000_query.txt";
+
+	// static String environment = testpath + "no_repeats_100000.txt";
+	// static String query = testpath + "no_repeats_100000_query.txt";
+
+	static String environment = testpath + "no_repeats_1000000.txt";
+	static String query = testpath + "no_repeats_1000000_query.txt";
+
+	// static String environment = testpath + "no_solution.txt";
+	// static String query = testpath + "no_solution_query.txt";
+
+	// static String environment = testpath + "square_1000.txt";
+	// static String query = testpath + "square_1000_query.txt";
+
+	// static String environment = testpath + "square_10000.txt";
+	// static String query = testpath + "square_10000_query.txt";
+
+	// static String environment = testpath + "square_100000.txt";
+	// static String query = testpath + "square_100000_query.txt";
+
+	// static String environment = testpath + "square_1000000.txt";
+	// static String query = testpath + "square_1000000_query.txt";
 	static String outputfile = "output.txt";
 
-	// static String environment = "testcase/testcase-1/test-simple.txt";
-	// static String query = "testcase/testcase-1/query-simple.txt";
 	// static Map<String, Road> roads = new HashMap<String, Road>();
 	static Queue<Road> queryRoads = new LinkedList<Road>();
 	static Map<String, Junction> junctions = new HashMap<String, Junction>();
@@ -88,7 +124,13 @@ public class Main {
 		// iRoads[0] for initial road
 		// iRoads[1] for goal road
 		Road[] iRoads = setInitRoad(initRoadName, goalRoadName);
+		// System.out.println(initPlot + iRoads[0].getName() + " ; " + goalPlot
+		// + iRoads[1].getName());
 
+		if (initPlot > iRoads[0].getnLots() || initPlot < 1 || goalPlot > iRoads[1].getnLots() || goalPlot < 1) {
+			printResult(shortestCost, path);
+			return;
+		}
 		if (isEven(initPlot)) {
 			initPlot--;
 		}
@@ -147,7 +189,7 @@ public class Main {
 			while (true) {
 				Junction peakJunction = junctionsQueue.poll();
 				if (peakJunction == null) {
-					printResult(shortestCost, path);
+					// printResult(shortestCost, path);
 					break;
 				}
 
@@ -207,9 +249,14 @@ public class Main {
 
 			if (!junctionsQueue.contains(junction)) {
 				junctionsQueue.add(junction);
-				junction.setPath(
-						peakJunction.getPath().append(" - " + roadNode.getName() + " - " + junction.getName()));
+				// junction.setPath(
+				// peakJunction.getPath().append(" - " + roadNode.getName() + "
+				// - " + junction.getName()));
 			}
+			junction.setPath(new StringBuffer(peakJunction.getPath()).append(" - ").append(roadNode.getName())
+					.append(" - ").append(junction.getName()));
+			// junction.getPath().append(" - " + roadNode.getName() + " - " +
+			// junction.getName());
 
 		}
 	}
@@ -308,7 +355,7 @@ public class Main {
 				Road tempRoad = new Road();
 				// boolean startJuncitonFlag = true;
 				// boolean endJuncitonFlag = true;
-				String[] lineEnv = tempLine.split(" ; ");
+				String[] lineEnv = tempLine.replaceAll(" ", "").split(";");
 				tempRoad.setName(lineEnv[0]);
 				Junction startJuncitonInit = junctions.get(lineEnv[1]);
 				Junction endJunctionInit = junctions.get(lineEnv[2]);
@@ -390,7 +437,7 @@ public class Main {
 			String tempLine = null;
 			while ((tempLine = readerQuery.readLine()) != null && !tempLine.equals("")) {
 				Query tempQuery = new Query();
-				String[] lineEnv = tempLine.split(" ; ");
+				String[] lineEnv = tempLine.replaceAll(" ", "").split(";");
 				tempQuery.setInitPlot(Integer.parseInt(lineEnv[0].substring(0, getNumIndex(lineEnv[0]) + 1)));
 				tempQuery.setInitName(lineEnv[0].substring(getNumIndex(lineEnv[0]) + 1, lineEnv[0].length()));
 				tempQuery.setEndPlot(Integer.parseInt(lineEnv[1].substring(0, getNumIndex(lineEnv[1]) + 1)));

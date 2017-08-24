@@ -8,6 +8,7 @@ public class Junction {
 	private float cost;
 	private ArrayList<Road> connectionRoad;
 	private StringBuffer path;
+	private Junction parent;
 
 	public Junction() {
 		// TODO Auto-generated constructor stub
@@ -69,7 +70,16 @@ public class Junction {
 	}
 
 	public void setPath(StringBuffer path) {
+		this.path = null;
 		this.path = path;
+	}
+
+	public Junction getParent() {
+		return parent;
+	}
+
+	public void setParent(Junction parent) {
+		this.parent = parent;
 	}
 
 }
