@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.Set;
 
 import bean.Junction;
 import bean.Query;
@@ -71,10 +73,9 @@ public class Main {
 	static String query = testpath + "square_1000000_query.txt";
 	static String outputfile = "output.txt";
 
-	// static Map<String, Road> roads = new HashMap<String, Road>();
 	static Queue<Road> queryRoads = new LinkedList<Road>();
 	static Map<String, Junction> junctions = new HashMap<String, Junction>();
-	// static ArrayList<Junction> junctions = new ArrayList<Junction>();
+	static Set<Junction> visited = new HashSet<Junction>();
 	static ArrayList<Query> queries = new ArrayList<Query>();
 	static StringBuffer result = new StringBuffer();
 
@@ -92,8 +93,11 @@ public class Main {
 		for (Query query : queries) {
 			for (Map.Entry<String, Junction> entry : junctions.entrySet()) {
 				entry.getValue().setCost(-1.0f);
+				// entry.getValue().setParentJunction(null);
+				// entry.getValue().setParentRoad(null);
 				// entry.getValue().setPath(new StringBuffer());
 			}
+			visited.removeAll(visited);
 			mainLoop(query);
 		}
 		// mainLoop();
@@ -124,8 +128,6 @@ public class Main {
 		// iRoads[0] for initial road
 		// iRoads[1] for goal road
 		Road[] iRoads = setInitRoad(initRoadName, goalRoadName);
-		// System.out.println(initPlot + iRoads[0].getName() + " ; " + goalPlot
-		// + iRoads[1].getName());
 
 		if (initPlot > iRoads[0].getnLots() || initPlot < 1 || goalPlot > iRoads[1].getnLots() || goalPlot < 1) {
 			printResult(shortestCost, path);
@@ -180,50 +182,42 @@ public class Main {
 			}
 
 			// push initial node's start and end junction to priority queue
-
 			junctionsQueue.add(initStartJunction);
-			// initStartJunction.setPath(new
-			// StringBuffer(initStartJunction.getName()));
 			junctionsQueue.add(initEndJunction);
-			// initEndJunction.setPath(new
-			// StringBuffer(initEndJunction.getName()));
 
 			// main loop to get the result
 			while (true) {
 				Junction peakJunction = junctionsQueue.poll();
+				visited.add(peakJunction);
 				if (peakJunction == null) {
-					// printResult(shortestCost, path);
 					break;
 				}
 
 				if (peakJunction == goalStartJunction && peakJunction.getCost() != -1) {
 					shortestCost = peakJunction.getCost();
-					// shortestCost = peakJunction.getCost() +
-					// goalStartJunctionCost;
-					// path = initRoadName + " - " + peakJunction.getPath() + "
-					// - " + goalRoadName;
 					path = initRoadName + " - " + getParentPath(peakJunction) + " - " + goalRoadName;
 					break;
 				}
 				if (peakJunction == goalEndJunction && peakJunction.getCost() != -1) {
 					shortestCost = peakJunction.getCost();
-					// shortestCost = peakJunction.getCost() +
-					// goalEndJunctionCost;
-					// path = initRoadName + " - " + peakJunction.getPath() + "
-					// - " + goalRoadName;
 					path = initRoadName + " - " + getParentPath(peakJunction) + " - " + goalRoadName;
 					break;
 				}
 
 				ArrayList<Road> peakConnetedRoads = peakJunction.getConnectionRoad();
-
 				for (Road roadNode : peakConnetedRoads) {
 					if (roadNode.getStartJunction() == peakJunction) {
-						pushSuccessor(junctionsQueue, peakJunction, roadNode.getEndJunction(), roadNode,
-								goalStartJunction, goalEndJunction, goalStartJunctionCost, goalEndJunctionCost);
+						if (!visited.contains(roadNode.getEndJunction())) {
+							pushSuccessor(junctionsQueue, peakJunction, roadNode.getEndJunction(), roadNode,
+									goalStartJunction, goalEndJunction, goalStartJunctionCost, goalEndJunctionCost);
+
+						}
 					} else {
-						pushSuccessor(junctionsQueue, peakJunction, roadNode.getStartJunction(), roadNode,
-								goalStartJunction, goalEndJunction, goalStartJunctionCost, goalEndJunctionCost);
+						if (!visited.contains(roadNode.getStartJunction())) {
+							pushSuccessor(junctionsQueue, peakJunction, roadNode.getStartJunction(), roadNode,
+									goalStartJunction, goalEndJunction, goalStartJunctionCost, goalEndJunctionCost);
+
+						}
 					}
 				}
 			}
@@ -249,31 +243,18 @@ public class Main {
 		// if next junction's cost is default value OR
 		// bigger than temp cost
 		// then push it into queue
-
 		if (junction.getCost() == -1.0 || tempCost < junction.getCost()) {
 			junction.setCost(tempCost);
-
 			if (!junctionsQueue.contains(junction)) {
 				junctionsQueue.add(junction);
-				// junction.setPath(
-				// peakJunction.getPath().append(" - " + roadNode.getName() + "
-				// - " + junction.getName()));
 			}
-			// junction.setPath(new
-			// StringBuffer(peakJunction.getPath()).append(" -
-			// ").append(roadNode.getName())
-			// .append(" - ").append(junction.getName()));
-			// junction.getPath().append(" - " + roadNode.getName() + " - " +
-			// junction.getName());
 			junction.setParentJunction(peakJunction);
 			junction.setParentRoad(roadNode);
-
 		}
 	}
 
 	public static Road[] setInitRoad(String initRoadName, String goalRoadName) {
 		try {
-			// int initAndGoalFlag = 0;
 			Road[] tempRoads = { new Road(), new Road() };
 
 			/*
@@ -285,27 +266,6 @@ public class Main {
 			tempRoads[1] = queryRoads.poll();
 			/*
 			 * Added end
-			 */
-
-			/*
-			 * Delete by Ray 14:12pm 23 AUG 2017
-			 */
-			// for (Road tempRoad : roads) {
-			// String tempRoadName = tempRoad.getName();
-			// if (initAndGoalFlag == 2) {
-			// break;
-			// }
-			// if (tempRoadName.equals(initRoadName)) {
-			// tempRoads[0] = tempRoad;
-			// initAndGoalFlag++;
-			// }
-			// if (tempRoadName.equals(goalRoadName)) {
-			// tempRoads[1] = tempRoad;
-			// initAndGoalFlag++;
-			// }
-			// }
-			/*
-			 * Delete end
 			 */
 
 			return tempRoads;
@@ -349,7 +309,6 @@ public class Main {
 
 	// read input file set Road and Junction
 	public static void init() {
-		// Map<String, Junction> junctions = new HashMap<String, Junction>();
 		Map<String, Road> roads = new HashMap<String, Road>();
 
 		File fileEnvironment = FileUtil.openFile(environment);
@@ -392,53 +351,10 @@ public class Main {
 				/*
 				 * Added end
 				 */
-
-				/*
-				 * Deleted by Ray 14:08pm 23 AUG 2017
-				 */
-				// if (junctions != null) {
-				// for (int i = 0; i < junctions.size(); i++) {
-				// if (lineEnv[1].equals(junctions.get(i).getName())) {
-				// tempRoad.setStartJunction(junctions.get(i));
-				// startJuncitonFlag = false;
-				// continue;
-				// } else if (lineEnv[2].equals(junctions.get(i).getName())) {
-				// tempRoad.setEndJunction(junctions.get(i));
-				// endJuncitonFlag = false;
-				// continue;
-				// }
-				// if (!startJuncitonFlag && !endJuncitonFlag) {
-				// break;
-				// }
-				// }
-				// }
-
-				// if (startJuncitonFlag) {
-				// Junction tempJuction = new Junction();
-				// tempJuction.setName(lineEnv[1]);
-				// junctions.put(tempJuction.getName(), tempJuction);
-				// // junctions.add(tempJuction);
-				// tempRoad.setStartJunction(tempJuction);
-				// }
-				// if (endJuncitonFlag) {
-				// Junction tempJuction = new Junction();
-				// tempJuction.setName(lineEnv[2]);
-				// junctions.put(tempJuction.getName(), tempJuction);
-				// // junctions.add(tempJuction);
-				// tempRoad.setEndJunction(tempJuction);
-				// }
-				// tempRoad.getStartJunction().addConnection(tempRoad);
-				// tempRoad.getEndJunction().addConnection(tempRoad);
-				// roads.add(tempRoad);
-				/*
-				 * Delete end
-				 */
 			}
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (NullPointerException e) {
-			// TODO: handle exception
 
 		}
 
@@ -456,7 +372,6 @@ public class Main {
 					queryRoads.add(roads.get(tempQuery.getInitName()));
 					queryRoads.add(roads.get(tempQuery.getEndName()));
 				} catch (NullPointerException e) {
-					// TODO: handle exception
 					System.err.println("queryRoads.add");
 				}
 				queries.add(tempQuery);
@@ -519,21 +434,9 @@ public class Main {
 		Junction junction2 = junction;
 		String path = "";
 		while (junction2.getParentJunction() != null) {
-			// stringBuffer.insert(0, junction.getParentRoad().getName() +
-			// junction.getName());
 			path = " - " + junction2.getParentRoad().getName() + " - " + junction2.getName() + path;
-			// System.out.println(junction2.getParentJunction().getName());
 			junction2 = junction2.getParentJunction();
 		}
 		return junction2.getName() + path;
-		// stringBuffer.insert(0, junction.getName());
-		// if (this.getParentJunction() == null) {
-		// // return new StringBuffer(this.getName());
-		// stringBuffer.insert(0, this.getName());
-		// return;
-		// }
-		// stringBuffer.insert(0, this.getParentRoad().getName() +
-		// this.getName());
-		// this.getParentJunction().getParentPath(stringBuffer);
 	}
 }
