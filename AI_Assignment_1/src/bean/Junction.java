@@ -1,12 +1,13 @@
 package bean;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Junction {
 
 	private String name;
 	private float cost;
-	private ArrayList<Road> connectionRoad;
+	private Map<Junction, Road> connectionRoad;
 	// private StringBuffer path;
 	private Junction parentJunction;
 	private Road parentRoad;
@@ -18,31 +19,18 @@ public class Junction {
 		// parentJunction = null;
 		parentRoad = null;
 		cost = -1.0f;
-		connectionRoad = new ArrayList<Road>();
+		connectionRoad = new HashMap<Junction, Road>();
 	}
 
-	public void addConnection(Road road) {
-		boolean flag = true;
-		if (connectionRoad != null) {
-			for (Road tempRoad : connectionRoad) {
-				if (tempRoad.getName().equals(road.getName())) {
-					flag = false;
-					break;
-				}
-			}
-			if (flag) {
-				connectionRoad.add(road);
-			}
-		} else {
-			connectionRoad.add(road);
-		}
+	public void addConnection(Junction junction, Road road) {
+		connectionRoad.put(junction, road);
 	}
 
-	public ArrayList<Road> getConnectionRoad() {
+	public Map<Junction, Road> getConnectionRoad() {
 		return connectionRoad;
 	}
 
-	public void setConnectionRoad(ArrayList<Road> connectionRoad) {
+	public void setConnectionRoad(Map<Junction, Road> connectionRoad) {
 		this.connectionRoad = connectionRoad;
 	}
 

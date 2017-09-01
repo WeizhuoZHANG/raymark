@@ -1,25 +1,25 @@
 package bean;
 
 public class Query {
-	private String initName;
-	private String endName;
+	private Road init;
+	private Road end;
 	private int initPlot;
 	private int endPlot;
 
-	public String getInitName() {
-		return initName;
+	public Road getInit() {
+		return init;
 	}
 
-	public void setInitName(String initName) {
-		this.initName = initName;
+	public void setInit(Road init) {
+		this.init = init;
 	}
 
-	public String getEndName() {
-		return endName;
+	public Road getEnd() {
+		return end;
 	}
 
-	public void setEndName(String endName) {
-		this.endName = endName;
+	public void setEnd(Road end) {
+		this.end = end;
 	}
 
 	public int getInitPlot() {

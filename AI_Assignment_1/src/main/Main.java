@@ -20,232 +20,141 @@ import bean.Query;
 import bean.Road;
 import util.FileUtil;
 
-/**
- * 1. str.replaceAll(" ","")
- *
- */
 public class Main {
-	static String testpath = "AI/";
-
-	// static String environment = testpath + "1_test-simple.txt";
-	// static String query = testpath + "1_query-simple.txt";
-
-	// static String environment = testpath + "1_test2.txt";
-	// static String query = testpath + "1_query2.txt";
-
-	// static String environment = testpath + "1000.txt";
-	// static String query = testpath + "1000_query.txt";
-
-	// static String environment = testpath + "10000.txt";
-	// static String query = testpath + "10000_query.txt";
-
-	// static String environment = testpath + "100000.txt";
-	// static String query = testpath + "100000_query.txt";
-
-	// static String environment = testpath + "1000000.txt";
-	// static String query = testpath + "1000000_query.txt";
-
-	// static String environment = testpath + "corner.txt";
-	// static String query = testpath + "corner_query.txt";
-
-	// static String environment = testpath + "no_repeats_1000.txt";
-	// static String query = testpath + "no_repeats_1000_query.txt";
-
-	// static String environment = testpath + "no_repeats_100000.txt";
-	// static String query = testpath + "no_repeats_100000_query.txt";
-
-	// static String environment = testpath + "no_repeats_1000000.txt";
-	// static String query = testpath + "no_repeats_1000000_query.txt";
-
-	// static String environment = testpath + "no_solution.txt";
-	// static String query = testpath + "no_solution_query.txt";
-
-	// static String environment = testpath + "square_1000.txt";
-	// static String query = testpath + "square_1000_query.txt";
-
-	// static String environment = testpath + "square_10000.txt";
-	// static String query = testpath + "square_10000_query.txt";
-
-	// static String environment = testpath + "square_100000.txt";
-	// static String query = testpath + "square_100000_query.txt";
-
-	static String environment = testpath + "square_1000000.txt";
-	static String query = testpath + "square_1000000_query.txt";
-	static String outputfile = "output.txt";
-
 	static Queue<Road> queryRoads = new LinkedList<Road>();
-	static Map<String, Junction> junctions = new HashMap<String, Junction>();
-	static Set<Junction> visited = new HashSet<Junction>();
 	static ArrayList<Query> queries = new ArrayList<Query>();
 	static StringBuffer result = new StringBuffer();
 
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis(); // 获取开始时间
-
-		// environment = args[0];
-		// query = args[1];
-		// outputfile = args[2];
-
-		init();
-		long endTime1 = System.currentTimeMillis(); // 获取结束时间
-		System.out.println("程序运行时间： " + (endTime1 - startTime) + "ms");
+		String testpath = "AI/";
+		String environment = testpath + "square_1000000.txt";
+		String queryFile = testpath + "square_1000000_query.txt";
+		String outputfile = "output.txt";
+		Map<String, Junction> junctions = new HashMap<String, Junction>();
+		init(junctions, environment, queryFile);
+		System.out.println("程序运行时间： " + (System.currentTimeMillis() - startTime) + "ms");
 		// initial junctions cost to -1.0, before starting a new loop of query
 		for (Query query : queries) {
 			for (Map.Entry<String, Junction> entry : junctions.entrySet()) {
 				entry.getValue().setCost(-1.0f);
-				// entry.getValue().setParentJunction(null);
-				// entry.getValue().setParentRoad(null);
-				// entry.getValue().setPath(new StringBuffer());
 			}
-			visited.removeAll(visited);
 			mainLoop(query);
 		}
 		// mainLoop();
-		output();
+		output(outputfile);
 
 		long endTime = System.currentTimeMillis(); // 获取结束时间
 		System.out.println("程序运行时间： " + (endTime - startTime) + "ms");
 	}
 
 	public static void mainLoop(Query query) {
-		String initRoadName = query.getInitName();
-		String goalRoadName = query.getEndName();
+		Road initRoad = query.getInit();
+		Road goalRoad = query.getEnd();
 		int initPlot = query.getInitPlot();
 		int goalPlot = query.getEndPlot();
-		// public static void mainLoop() {
-		// String initRoadName = "road_6652_0_6682";
-		// String goalRoadName = "road_66656_1_66705";
-		// int initPlot = 200;
-		// int goalPlot = 200;
-
-		Comparator<Junction> OrderIsdn = getComparator(); // set comparator by
-															// decrease
-		PriorityQueue<Junction> junctionsQueue = new PriorityQueue<Junction>(OrderIsdn);
+		Junction goalJunction = new Junction();
+		Road fakeRoadStart = new Road();
+		Road fakeRoadEnd = new Road();
 		float shortestCost = 0;
 		String path = "";
+		Comparator<Junction> OrderIsdn = getComparator();
+		PriorityQueue<Junction> junctionsQueue = new PriorityQueue<Junction>(OrderIsdn);
+		Set<Junction> visited = new HashSet<Junction>();
 
-		// find initial and end Road
-		// iRoads[0] for initial road
-		// iRoads[1] for goal road
-		Road[] iRoads = setInitRoad(initRoadName, goalRoadName);
-
-		if (initPlot > iRoads[0].getnLots() || initPlot < 1 || goalPlot > iRoads[1].getnLots() || goalPlot < 1) {
+		if (initPlot > initRoad.getnLots() || initPlot < 1 || goalPlot > goalRoad.getnLots() || goalPlot < 1) {
 			printResult(shortestCost, path);
 			return;
 		}
-		if (isEven(initPlot)) {
-			initPlot--;
-		}
 
-		if (isEven(goalPlot)) {
-			goalPlot--;
-		}
+		initPlot = isEven(initPlot);
+		goalPlot = isEven(goalPlot);
 
 		// if initial road is goal road
-		if (initRoadName.equals(goalRoadName)) {
-			shortestCost = Math.abs(goalPlot - initPlot) / 2 * iRoads[0].getLengthOfLot();
-			printResult(shortestCost, initRoadName);
+		if (initRoad.equals(goalRoad)) {
+			shortestCost = Math.abs(goalPlot - initPlot) / 2 * initRoad.getLengthOfLot();
+			printResult(shortestCost, initRoad.getName());
 			return;
 		}
 
 		// set goal junctions node
-		Junction goalStartJunction = iRoads[1].getStartJunction();
-		Junction goalEndJunction = iRoads[1].getEndJunction();
-		setJunctionsValue(goalStartJunction, goalEndJunction, iRoads[1], goalPlot);
+		setInitValue(goalRoad.getStartJunction(), fakeRoadStart, goalJunction);
+		fakeRoadStart.setLength(computePlotValue(goalRoad, goalPlot));
+		setInitValue(goalRoad.getEndJunction(), fakeRoadEnd, goalJunction);
+		fakeRoadEnd.setLength(goalRoad.getLength() - fakeRoadStart.getLength());
+
+		initRoad.getStartJunction().setCost(computePlotValue(initRoad, initPlot));
+		initRoad.getEndJunction().setCost(initRoad.getLength() - initRoad.getStartJunction().getCost());
+		initRoad.getStartJunction().setParentJunction(null);
+		initRoad.getEndJunction().setParentJunction(null);
 
 		try {
-			float goalStartJunctionCost = goalStartJunction.getCost();
-			float goalEndJunctionCost = goalEndJunction.getCost();
-
-			// set goal junctions to default value -1.0f
-			goalStartJunction.setCost(-1f);
-			goalEndJunction.setCost(-1f);
-
-			// set Initial junctions node
-			Junction initStartJunction = iRoads[0].getStartJunction();
-			Junction initEndJunction = iRoads[0].getEndJunction();
-			setJunctionsValue(initStartJunction, initEndJunction, iRoads[0], initPlot);
-			initStartJunction.setParentJunction(null);
-			initEndJunction.setParentJunction(null);
-			/*
-			 * 8/17 4:22pm
-			 */
-			if (initStartJunction == goalStartJunction) {
-				initStartJunction.setCost(initStartJunction.getCost() + goalStartJunctionCost);
-			} else if (initStartJunction == goalEndJunction) {
-				initStartJunction.setCost(initStartJunction.getCost() + goalEndJunctionCost);
-			}
-			if (initEndJunction == goalStartJunction) {
-				initEndJunction.setCost(initEndJunction.getCost() + goalStartJunctionCost);
-			} else if (initEndJunction == goalEndJunction) {
-				initEndJunction.setCost(initEndJunction.getCost() + goalEndJunctionCost);
-			}
-
 			// push initial node's start and end junction to priority queue
-			junctionsQueue.add(initStartJunction);
-			junctionsQueue.add(initEndJunction);
+			junctionsQueue.add(initRoad.getStartJunction());
+			junctionsQueue.add(initRoad.getEndJunction());
 
 			// main loop to get the result
-			while (true) {
+			while (!junctionsQueue.isEmpty() && !junctionsQueue.peek().equals(goalJunction)) {
 				Junction peakJunction = junctionsQueue.poll();
 				visited.add(peakJunction);
-				if (peakJunction == null) {
-					break;
-				}
 
-				if (peakJunction == goalStartJunction && peakJunction.getCost() != -1) {
-					shortestCost = peakJunction.getCost();
-					path = initRoadName + " - " + getParentPath(peakJunction) + " - " + goalRoadName;
-					break;
-				}
-				if (peakJunction == goalEndJunction && peakJunction.getCost() != -1) {
-					shortestCost = peakJunction.getCost();
-					path = initRoadName + " - " + getParentPath(peakJunction) + " - " + goalRoadName;
-					break;
-				}
+				// if (peakJunction == goalJunction) {
+				// shortestCost = peakJunction.getCost();
+				// path = initRoad.getName() + " - " +
+				// getParentPath(peakJunction.getParentJunction()) + " - "
+				// + goalRoad.getName();
+				// break;
+				// }
 
-				ArrayList<Road> peakConnetedRoads = peakJunction.getConnectionRoad();
-				for (Road roadNode : peakConnetedRoads) {
-					if (roadNode.getStartJunction() == peakJunction) {
-						if (!visited.contains(roadNode.getEndJunction())) {
-							pushSuccessor(junctionsQueue, peakJunction, roadNode.getEndJunction(), roadNode,
-									goalStartJunction, goalEndJunction, goalStartJunctionCost, goalEndJunctionCost);
-
-						}
-					} else {
-						if (!visited.contains(roadNode.getStartJunction())) {
-							pushSuccessor(junctionsQueue, peakJunction, roadNode.getStartJunction(), roadNode,
-									goalStartJunction, goalEndJunction, goalStartJunctionCost, goalEndJunctionCost);
-
-						}
+				for (Junction junctionNode : peakJunction.getConnectionRoad().keySet()) {
+					if (!visited.contains(junctionNode)) {
+						// float tempCost = peakJunction.getCost()
+						// +
+						// peakJunction.getConnectionRoad().get(junctionNode).getLength();
+						// if (junctionNode.getCost() == -1.0) {
+						// junctionNode.setCost(tempCost);
+						// junctionsQueue.add(junctionNode);
+						// junctionNode.setParentJunction(peakJunction);
+						// junctionNode.setParentRoad(peakJunction.getConnectionRoad().get(junctionNode));
+						// } else if (tempCost < junctionNode.getCost()) {
+						// junctionNode.setCost(tempCost);
+						// junctionNode.setParentJunction(peakJunction);
+						// junctionNode.setParentRoad(peakJunction.getConnectionRoad().get(junctionNode));
+						// if (junctionsQueue.remove(junctionNode)) {
+						// junctionsQueue.add(junctionNode);
+						// }
+						// }
+						pushSuccessor(junctionsQueue, peakJunction, junctionNode,
+								peakJunction.getConnectionRoad().get(junctionNode));
 					}
 				}
 			}
 		} catch (NullPointerException e) {
 		}
+		{
+			goalRoad.getStartJunction().getConnectionRoad().remove(fakeRoadStart);
+			goalRoad.getEndJunction().getConnectionRoad().remove(fakeRoadEnd);
+		}
 		printResult(shortestCost, path);
 	}
 
+	public static void setInitValue(Junction junction, Road newRoad, Junction goal) {
+		junction.addConnection(goal, newRoad);
+		newRoad.setStartJunction(junction);
+		newRoad.setEndJunction(goal);
+	}
+
+	public static float computePlotValue(Road road, int plot) {
+		return road.getLengthOfLot() * (0.5f + plot / 2);
+	}
+
 	public static void pushSuccessor(PriorityQueue<Junction> junctionsQueue, Junction peakJunction, Junction junction,
-			Road roadNode, Junction goalStartJunction, Junction goalEndJunction, float goalStartJunctionCost,
-			float goalEndJunctionCost) {
-		float tempCost;
+			Road roadNode) {
 		// set temp cost
-
-		if (junction == goalStartJunction) {
-			tempCost = peakJunction.getCost() + roadNode.getLength() + goalStartJunctionCost;
-		} else if (junction == goalEndJunction) {
-			tempCost = peakJunction.getCost() + roadNode.getLength() + goalEndJunctionCost;
-		} else {
-			tempCost = peakJunction.getCost() + roadNode.getLength();
-		}
-
-		// if next junction's cost is default value OR
-		// bigger than temp cost
-		// then push it into queue
+		float tempCost = peakJunction.getCost() + roadNode.getLength();
 		if (junction.getCost() == -1.0 || tempCost < junction.getCost()) {
 			junction.setCost(tempCost);
-			if (!junctionsQueue.contains(junction)) {
+			if (junctionsQueue.remove(junction)) {
 				junctionsQueue.add(junction);
 			}
 			junction.setParentJunction(peakJunction);
@@ -253,39 +162,8 @@ public class Main {
 		}
 	}
 
-	public static Road[] setInitRoad(String initRoadName, String goalRoadName) {
-		try {
-			Road[] tempRoads = { new Road(), new Road() };
-
-			/*
-			 * Added by Ray 14:12pm 23 AUG 2017
-			 */
-			// tempRoads[0] = roads.get(initRoadName);
-			// tempRoads[1] = roads.get(goalRoadName);
-			tempRoads[0] = queryRoads.poll();
-			tempRoads[1] = queryRoads.poll();
-			/*
-			 * Added end
-			 */
-
-			return tempRoads;
-		} catch (NullPointerException e) {
-			// TODO: handle exception
-			System.err.println("setInitRoad");
-		}
-		return null;
-	}
-
-	public static void setJunctionsValue(Junction startJunction, Junction endJunction, Road road, int plot) {
-		try {
-
-			startJunction.setCost(road.getLengthOfLot() * (0.5f + plot / 2));
-			endJunction.setCost(road.getLength() - startJunction.getCost());
-		} catch (
-
-		NullPointerException e) {
-			System.err.println("setJunctionsValue");
-		}
+	public static float setJunctionsValue(Junction junction, Road road, int plot) {
+		return road.getLengthOfLot() * (0.5f + plot / 2);
 	}
 
 	// decreased order according to cost
@@ -308,7 +186,7 @@ public class Main {
 	}
 
 	// read input file set Road and Junction
-	public static void init() {
+	public static void init(Map<String, Junction> junctions, String environment, String query) {
 		Map<String, Road> roads = new HashMap<String, Road>();
 
 		File fileEnvironment = FileUtil.openFile(environment);
@@ -345,8 +223,8 @@ public class Main {
 				}
 				tempRoad.setStartJunction(startJuncitonInit);
 				tempRoad.setEndJunction(endJunctionInit);
-				startJuncitonInit.addConnection(tempRoad);
-				endJunctionInit.addConnection(tempRoad);
+				startJuncitonInit.addConnection(endJunctionInit, tempRoad);
+				endJunctionInit.addConnection(startJuncitonInit, tempRoad);
 				roads.put(lineEnv[0], tempRoad);
 				/*
 				 * Added end
@@ -364,13 +242,13 @@ public class Main {
 				Query tempQuery = new Query();
 				String[] lineEnv = tempLine.replaceAll(" ", "").split(";");
 				tempQuery.setInitPlot(Integer.parseInt(lineEnv[0].substring(0, getNumIndex(lineEnv[0]) + 1)));
-				tempQuery.setInitName(lineEnv[0].substring(getNumIndex(lineEnv[0]) + 1, lineEnv[0].length()));
+				tempQuery.setInit(roads.get(lineEnv[0].substring(getNumIndex(lineEnv[0]) + 1, lineEnv[0].length())));
 				tempQuery.setEndPlot(Integer.parseInt(lineEnv[1].substring(0, getNumIndex(lineEnv[1]) + 1)));
-				tempQuery.setEndName(lineEnv[1].substring(getNumIndex(lineEnv[1]) + 1, lineEnv[1].length()));
+				tempQuery.setEnd(roads.get(lineEnv[1].substring(getNumIndex(lineEnv[1]) + 1, lineEnv[1].length())));
 
 				try {
-					queryRoads.add(roads.get(tempQuery.getInitName()));
-					queryRoads.add(roads.get(tempQuery.getEndName()));
+					queryRoads.add(tempQuery.getInit());
+					queryRoads.add(tempQuery.getEnd());
 				} catch (NullPointerException e) {
 					System.err.println("queryRoads.add");
 				}
@@ -411,7 +289,7 @@ public class Main {
 		}
 	}
 
-	public static void output() {
+	public static void output(String outputfile) {
 		try {
 			int i = result.lastIndexOf("\r\n");
 			result = new StringBuffer(result.substring(0, i));
@@ -423,11 +301,11 @@ public class Main {
 		}
 	}
 
-	public static boolean isEven(float number) {
+	public static int isEven(int number) {
 		if ((number % 2) == 0) {
-			return true;
+			return number--;
 		}
-		return false;
+		return number;
 	}
 
 	public static String getParentPath(Junction junction) {
