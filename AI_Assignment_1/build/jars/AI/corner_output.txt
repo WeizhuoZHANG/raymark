@@ -1,7 +1,0 @@
-no-path
-no-path
-no-path
-no-path
-no-path
-4.0 ; Road1
-4.0 ; Road1
